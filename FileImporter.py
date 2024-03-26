@@ -9,12 +9,13 @@ class FileImporter():
         self.filename = filename
         self.destination_path = destination_path
         self.destination_name = destination_name
+        self.import_task = unreal.AssetImportTask()
 
-    def get_import_options(self):
+    def get_import_settings(self):
         #override this method.
         return
 
-    def get_import_task(self,filename = None,
+    def set_import_task(self,filename = None,
                         destination_path = None,
                         destination_name = None,
                         save = True,
@@ -23,24 +24,26 @@ class FileImporter():
                         replace_existing_settings = False,
                         options = None):
         
-        # Create an import task.
-        import_task = unreal.AssetImportTask()
         # Set base properties on the task.
-        import_task.filename = self.filename if filename is None else filename
-        import_task.destination_path = self.destination_path if destination_path is None else destination_path
-        import_task.destination_name = self.destination_name if destination_name is None else destination_name
-        import_task.save = save
-        import_task.automated = automated # Suppress UI.
-        import_task.replace_existing = replace_existing
-        import_task.replace_existing_settings = replace_existing_settings
-        import_task.options = self.get_import_options() if options is None else options
-        
-        return import_task
+        self.import_task.filename = self.filename if filename is None else filename
+        self.import_task.destination_path = self.destination_path if destination_path is None else destination_path
+        self.import_task.destination_name = self.destination_name if destination_name is None else destination_name
+        self.import_task.save = save
+        self.import_task.automated = automated # Suppress UI.
+        self.import_task.replace_existing = replace_existing
+        self.import_task.replace_existing_settings = replace_existing_settings
+        self.import_task.options = self.get_import_settings() if options is None else options        
+
+        return
+
+    def get_import_task(self):
+        return self.import_task
     
     def import_file(self,task = None):
 
         # Create an import task.
         import_task = self.get_import_task() if task is None else task
+        print(import_task)
         asset_tools = unreal.AssetToolsHelpers.get_asset_tools()
         asset_tools.import_asset_tasks([import_task])
         imported_asset = import_task.get_editor_property('imported_object_paths')

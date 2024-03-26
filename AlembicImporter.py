@@ -1,6 +1,8 @@
 import unreal
 from FileImporter import *
 
+#TODO: Start every setting as None and create on the setters.
+#TODO: self.import_settings declared as none in FileImporter.
 class AlembicImporter(FileImporter):
 
     def __init__(self,alembic_path,asset_path,asset_name):
@@ -13,6 +15,7 @@ class AlembicImporter(FileImporter):
         self.normal_generation_settings = unreal.AbcNormalGenerationSettings()
         self.sampling_settings = unreal.AbcSamplingSettings()
         self.static_mesh_settings = unreal.AbcStaticMeshSettings()
+        self.set_import_settings()
 
     #uses unreal default settings.
     def set_compression_settings(self,
@@ -57,21 +60,8 @@ class AlembicImporter(FileImporter):
 
         return
     
-    def get_conversion_settings(self,
-                                preset= unreal.AbcConversionPreset.MAYA,
-                                flip_u = False,
-                                flip_v = True,
-                                rotation = unreal.Vector(x = 90.0,y=0.0,z=0.0),
-                                scale = unreal.Vector(x = 1.0,y=-1.0,z=1.0)):
-
-        settings = unreal.AbcConversionSettings()
-        settings.preset = preset
-        settings.flip_u = flip_u
-        settings.flip_v = flip_v
-        settings.rotation = rotation
-        settings.scale = scale
-
-        return settings
+    def get_conversion_settings(self):
+        return self.conversion_settings
 
     def set_geometry_cache_settings(self,
                                     flatten_tracks = True,
@@ -154,22 +144,32 @@ class AlembicImporter(FileImporter):
     def get_static_mesh_settings(self):
         return self.static_mesh_settings
 
-    def set_import_options(self,
-                           import_type = unreal.AlembicImportType.SKELETAL):
+    def set_import_settings(self,
+                           import_type = unreal.AlembicImportType.SKELETAL,
+                           static_mesh_settings = None,
+                           geometry_cache_settings = None,
+                           compression_settings = None,
+                           sampling_settings = None,
+                           normal_generation_settings=None,
+                           material_settings = None,
+                           conversion_settings = None,
+                           ):
         
         self.import_settings.import_type = import_type
-        
+        if import_type == unreal.AlembicImportType.SKELETAL:
+            self.import_settings.compression_settings = self.get_compression_settings() if compression_settings is None else compression_settings
+        elif import_type == unreal.AlembicImportType.GEOMETRY_CACHE:
+            self.import_settings.geometry_cache_settings = self.get_geometry_cache_settings() if geometry_cache_settings is None else geometry_cache_settings
+        elif import_type == unreal.AlembicImportType.STATIC_MESH:
+            self.import_settings.static_mesh_settings = self.get_static_mesh_settings() if static_mesh_settings is None else static_mesh_settings
+        else:
+            print("Error: Alembic import type unknown")
+
+        self.import_settings.sampling_settings = self.get_sampling_settings() if sampling_settings is None else sampling_settings
+        self.import_settings.normal_generation_settings = self.get_normal_generation_settings() if normal_generation_settings is None else normal_generation_settings
+        self.import_settings.material_settings = self.get_material_settings() if material_settings is None else material_settings
+        self.import_settings.conversion_settings = self.get_conversion_settings() if conversion_settings is None else conversion_settings
         return
 
-    def get_import_options(self,import_type = unreal.AlembicImportType.SKELETAL,
-                           conversion_settings = None,
-                           frame_start = 0,
-                           frame_end = 0):
-
-        options = unreal.AbcImportSettings()
-        options.import_type = import_type
-        options.conversion_settings = self.get_conversion_settings() if conversion_settings is None else conversion_settings 
-        options.sampling_settings.frame_start = frame_start
-        options.sampling_settings.frame_end = frame_end
-
-        return options
+    def get_import_settings(self):
+        return self.import_settings
